@@ -1,0 +1,10 @@
+LICENSE
+MANIFEST.in
+README.md
+cuid.py
+setup.cfg
+setup.py
+cuid.egg-info/PKG-INFO
+cuid.egg-info/SOURCES.txt
+cuid.egg-info/dependency_links.txt
+cuid.egg-info/top_level.txt

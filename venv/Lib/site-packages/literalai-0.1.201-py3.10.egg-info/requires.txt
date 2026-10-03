@@ -1,0 +1,5 @@
+packaging>=23.0
+httpx>=0.23.0
+pydantic<3,>=1
+chevron>=0.14.0
+traceloop-sdk>=0.33.12
