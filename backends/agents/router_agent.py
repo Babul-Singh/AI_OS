@@ -12,7 +12,6 @@ class RouterAgent:
     }
 
     def route(self, query):
-
         prompt = f"""
 You are an AI router.
 
@@ -29,7 +28,7 @@ Available agents:
 User Query:
 {query}
 
-Return ONLY one word.
+Return ONLY one word from this list:
 
 chat
 research
@@ -38,28 +37,59 @@ coding
 file
 """
 
-        
-        response = llm.invoke(prompt)
+        print("ROUTER: Calling Gemini...")
+
+        try:
+            response = llm.invoke(prompt)
+
+            print("ROUTER: Gemini response received")
+            print("ROUTER RESPONSE TYPE:", type(response.content))
+            print("ROUTER RESPONSE:", response.content)
+
+        except Exception as e:
+            print("ROUTER GEMINI ERROR")
+            print("ERROR TYPE:", type(e).__name__)
+            print("ERROR:", e)
+            raise
 
         content = response.content
 
-        # Handle Gemini/LangChain string or list responses
         if isinstance(content, str):
             text = content
+
         elif isinstance(content, list):
-            text = " ".join(
-                item if isinstance(item, str)
-                else item.get("text", "") if isinstance(item, dict)
-                else ""
-                for item in content
-            )
+            parts = []
+
+            for item in content:
+                if isinstance(item, str):
+                    parts.append(item)
+
+                elif isinstance(item, dict):
+                    if item.get("text"):
+                        parts.append(item["text"])
+
+            text = " ".join(parts)
+
         else:
             text = str(content)
 
         agent = text.strip().lower()
 
-        # Match the response to a valid agent
+        agent = agent.replace("`", "")
+        agent = agent.replace(".", "")
+        agent = agent.replace('"', "")
+        agent = agent.replace("'", "")
+        agent = agent.strip()
+
         if agent not in self.VALID_AGENTS:
-            agent = "chat"
+
+            for valid_agent in self.VALID_AGENTS:
+                if valid_agent in agent:
+                    agent = valid_agent
+                    break
+            else:
+                agent = "chat"
+
+        print(f"Router selected: {agent}")
 
         return agent

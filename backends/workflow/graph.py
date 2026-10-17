@@ -23,14 +23,15 @@ router_agent = RouterAgent()
 
 # STATE
 
-class AgentState(TypedDict):
+from typing import TypedDict, NotRequired
 
+class AgentState(TypedDict):
     user_input: str
-    file_path: str
-    memories: str
-    profile: str
-    next_agent: str
-    response: str
+    file_path: NotRequired[str | None]
+    memories: NotRequired[list]
+    profile: NotRequired[dict]
+    next_agent: NotRequired[str]
+    response: NotRequired[object]
 
 
 # =========================
@@ -209,17 +210,24 @@ Generate intelligent coding solutions.
 # =========================
 
 def file_node(state):
+    file_path = state.get("file_path")
 
-    file_path = state["file_path"]
+    if not file_path:
+        return {
+            "response": (
+                "Please upload a PDF before asking questions "
+                "about a document."
+            )
+        }
+
+    user_question = state["user_input"]
 
     result = file_agent.invoke(
-        file_path
+        file_path,
+        user_question
     )
 
-    return {
-
-        "response": result
-    }
+    return {"response": result}
 
 #chat node
 

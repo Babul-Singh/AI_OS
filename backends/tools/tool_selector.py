@@ -37,4 +37,44 @@ none
 
         response = llm.invoke(prompt)
 
-        return response.content.strip().lower()
+        # Gemini may return either a string
+        # or a list of content blocks.
+        content = response.content
+
+        if isinstance(content, str):
+
+            text = content
+
+        elif isinstance(content, list):
+
+            parts = []
+
+            for item in content:
+
+                if isinstance(item, str):
+                    parts.append(item)
+
+                elif isinstance(item, dict):
+
+                    if item.get("text"):
+                        parts.append(item["text"])
+
+            text = " ".join(parts)
+
+        else:
+
+            text = str(content)
+
+        # Clean the response
+        tool = text.strip().lower()
+
+        # Remove common formatting
+        tool = tool.replace("`", "")
+        tool = tool.replace(".", "")
+        tool = tool.replace('"', "")
+        tool = tool.replace("'", "")
+        tool = tool.strip()
+
+        print(f"Tool selected: {tool}")
+
+        return tool

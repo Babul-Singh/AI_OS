@@ -1,4 +1,3 @@
-#from langchain_ollama import ChatOllama
 from backends.core.llm import llm
 from backends.tools.tool_manager import ToolManager
 
@@ -6,56 +5,41 @@ from backends.tools.tool_manager import ToolManager
 class FileAgent:
 
     def __init__(self):
-
-        #self.llm = ChatOllama(
-         #   model="llama3"
-        #)
-
         self.tool_manager = ToolManager()
 
-    def invoke(self, file_path):
-
+    def invoke(self, file_path, prompt):
         pdf_content = self.tool_manager.use_tool(
             "pdf_reader",
             file_path
         )
 
-        prompt = f"""
+        full_prompt = f"""
 You are an intelligent document analysis AI.
 
-Analyze this PDF content:
-
+PDF CONTENT:
 {pdf_content}
 
-TASKS:
-- Summarize document
-- Extract important concepts
-- Explain key insights
+USER QUESTION:
+{prompt}
+
+Instructions:
+- Answer the user's question using the PDF.
+- Summarize relevant information when useful.
+- Explain important concepts clearly.
+- Do not invent information missing from the PDF.
 """
 
-        return self.generate(prompt)
+        response = llm.invoke(full_prompt)
+        content = response.content
 
-    def stream(self, file_path):
+        if isinstance(content, str):
+            return content
 
-        pdf_content = self.tool_manager.use_tool(
-            "pdf_reader",
-            file_path
-        )
+        if isinstance(content, list):
+            return "\n".join(
+                item["text"]
+                for item in content
+                if isinstance(item, dict) and item.get("text")
+            )
 
-        prompt = f"""
-You are an intelligent document analysis AI.
-
-Analyze this PDF content:
-
-{pdf_content}
-
-TASKS:
-- Summarize document
-- Extract important concepts
-- Explain key insights
-"""
-
-        for chunk in llm.stream(prompt):
-
-            if chunk.content:
-                yield chunk.content
+        return str(content)
